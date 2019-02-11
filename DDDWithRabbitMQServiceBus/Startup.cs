@@ -1,4 +1,5 @@
-﻿using DDDWithRabbitMQServiceBus.EventBus.Abstract;
+﻿using DDDWithRabbitMQServiceBus.EventBus;
+using DDDWithRabbitMQServiceBus.EventBus.Abstract;
 using DDDWithRabbitMQServiceBus.EventBusRabbitMQ;
 using DDDWithRabbitMQServiceBus.Events;
 using DDDWithRabbitMQServiceBus.Events.TestEventHandler;
@@ -7,7 +8,6 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using RabbitMQ.Client;
 
 namespace DDDWithRabbitMQServiceBus
@@ -26,7 +26,7 @@ namespace DDDWithRabbitMQServiceBus
         {
             services.AddSingleton<IRabbitMqPersistentConnection>(sp =>
             {
-                var factory = new ConnectionFactory()
+                var factory = new ConnectionFactory
                 {
                     HostName = Configuration["EventBusConnection"]
                 };
@@ -37,9 +37,10 @@ namespace DDDWithRabbitMQServiceBus
             services.AddSingleton<IEventBus, EventBusRabbitMq>(sp =>
             {
                 var rabbitMqPersistentConnection = sp.GetRequiredService<IRabbitMqPersistentConnection>();
-                return new EventBusRabbitMq(rabbitMqPersistentConnection);
+                var eventBusSubcriptionsManager = sp.GetRequiredService<EventBus.IEventBusSubscriptionsManager>();
+                return new EventBusRabbitMq(rabbitMqPersistentConnection, eventBusSubcriptionsManager);
             });
-
+            services.AddSingleton<EventBus.IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
             services.AddTransient<TestEventHandler>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }

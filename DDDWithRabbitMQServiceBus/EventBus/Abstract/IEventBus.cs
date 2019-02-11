@@ -12,6 +12,6 @@ namespace DDDWithRabbitMQServiceBus.EventBus.Abstract
 
         void Subscribe<T, TH>()
             where T : IntegrationEvent
-            where TH : IIntegrationEventHandler;
+            where TH : IIntegrationEventHandler<T>;
     }
 }

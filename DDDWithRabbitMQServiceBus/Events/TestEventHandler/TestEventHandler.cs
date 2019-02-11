@@ -8,9 +8,12 @@ namespace DDDWithRabbitMQServiceBus.Events.TestEventHandler
 {
     public class TestEventHandler: IIntegrationEventHandler<TestEvent>
     {
-        public bool Handle(TestEvent @event)
+        public async Task Handle(TestEvent @event)
         {
-            return true;
+            await Task.Run(() =>
+            {
+                var a = "good";
+            });
         }
     }
 }

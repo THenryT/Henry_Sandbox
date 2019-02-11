@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net.Sockets;
 using System.Text;
+using DDDWithRabbitMQServiceBus.EventBus;
 using DDDWithRabbitMQServiceBus.EventBus.Abstract;
 using DDDWithRabbitMQServiceBus.EventBus.Events;
 using Newtonsoft.Json;
@@ -15,12 +16,14 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
         private const string BrokerName = "test_broker";
         private readonly IRabbitMqPersistentConnection _persistentConnection;
         private readonly int _retryCount;
+        private readonly IEventBusSubscriptionsManager _subsManager;
 
-        public EventBusRabbitMq(IRabbitMqPersistentConnection rabbitMqPersistentConnection,
-            int retryCount = 5)
+        public EventBusRabbitMq(IRabbitMqPersistentConnection rabbitMqPersistentConnection, EventBus.IEventBusSubscriptionsManager subsManager
+            ,int retryCount = 5)
         {
             _retryCount = retryCount;
             _persistentConnection = rabbitMqPersistentConnection;
+            _subsManager = subsManager;
         }
 
         public void Publish(IntegrationEvent @event)
@@ -56,9 +59,32 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
             }
         }
 
-        public void Subscribe<T, TH>() where T : IntegrationEvent where TH : IIntegrationEventHandler
+        public void Subscribe<T, TH>()
+            where T : IntegrationEvent
+            where TH : IIntegrationEventHandler<T>
         {
-            throw new NotImplementedException();
+            var eventName = _subsManager.GetEventKey<T>();
+            DoInternalSubscription(eventName);
+            _subsManager.AddSubscription<T, TH>();
+        }
+
+        private void DoInternalSubscription(string eventName)
+        {
+            var containsKey = _subsManager.HasSubscriptionsForEvent(eventName);
+            if (!containsKey)
+            {
+                if (!_persistentConnection.IsConnected)
+                {
+                    _persistentConnection.TryConnect();
+                }
+
+                using (var channel = _persistentConnection.CreateModel())
+                {
+                    channel.QueueBind(queue: "test",
+                        exchange: BrokerName,
+                        routingKey: eventName);
+                }
+            }
         }
     }
 }
