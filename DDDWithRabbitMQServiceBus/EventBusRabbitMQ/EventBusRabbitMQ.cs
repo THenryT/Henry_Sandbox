@@ -7,6 +7,7 @@ using DDDWithRabbitMQServiceBus.EventBus.Events;
 using Newtonsoft.Json;
 using Polly;
 using RabbitMQ.Client;
+using RabbitMQ.Client.Events;
 using RabbitMQ.Client.Exceptions;
 
 namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
@@ -17,6 +18,7 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
         private readonly IRabbitMqPersistentConnection _persistentConnection;
         private readonly int _retryCount;
         private readonly IEventBusSubscriptionsManager _subsManager;
+        private IModel _consumerChannel;
 
         public EventBusRabbitMq(IRabbitMqPersistentConnection rabbitMqPersistentConnection, EventBus.IEventBusSubscriptionsManager subsManager
             ,int retryCount = 5)
@@ -24,6 +26,7 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
             _retryCount = retryCount;
             _persistentConnection = rabbitMqPersistentConnection;
             _subsManager = subsManager;
+            _consumerChannel = CreateConsumerChannel();
         }
 
         public void Publish(IntegrationEvent @event)
@@ -59,6 +62,47 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
             }
         }
 
+        private IModel CreateConsumerChannel()
+        {
+            if (!_persistentConnection.IsConnected)
+            {
+                _persistentConnection.TryConnect();
+            }
+
+            var channel = _persistentConnection.CreateModel();
+
+            channel.ExchangeDeclare(exchange: BrokerName,
+                type: "direct");
+
+            channel.QueueDeclare(queue: "test",
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+
+
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += (model, ea) =>
+            {
+                var eventName = ea.RoutingKey;
+                var message = Encoding.UTF8.GetString(ea.Body);
+
+                channel.BasicAck(ea.DeliveryTag, multiple: false);
+            };
+
+            channel.BasicConsume(queue: "test",
+                autoAck: false,
+                consumer: consumer);
+
+            channel.CallbackException += (sender, ea) =>
+            {
+                _consumerChannel.Dispose();
+                _consumerChannel = CreateConsumerChannel();
+            };
+
+            return channel;
+        }
+
         public void Subscribe<T, TH>()
             where T : IntegrationEvent
             where TH : IIntegrationEventHandler<T>
@@ -66,6 +110,7 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
             var eventName = _subsManager.GetEventKey<T>();
             DoInternalSubscription(eventName);
             _subsManager.AddSubscription<T, TH>();
+            _consumerChannel.BasicGet("test", true);
         }
 
         private void DoInternalSubscription(string eventName)
