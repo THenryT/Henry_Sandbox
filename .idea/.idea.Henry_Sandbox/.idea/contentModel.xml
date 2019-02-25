@@ -4,6 +4,33 @@
     <e p="$USER_HOME$/Library/Caches/Rider2018.2/extResources" t="IncludeRecursive" />
     <e p="$USER_HOME$/Library/Caches/Rider2018.2/resharper-host/local/Transient/ReSharperHost/v182/SolutionCaches/_Henry_Sandbox.160979997.00" t="ExcludeRecursive" />
     <e p="$PROJECT_DIR$" t="IncludeFlat">
+      <e p="API_MediatR" t="IncludeRecursive">
+        <e p="API_MediatR.csproj" t="IncludeRecursive" />
+        <e p="appsettings.Development.json" t="Include" />
+        <e p="appsettings.json" t="Include" />
+        <e p="Bin" t="ExcludeRecursive" />
+        <e p="Command" t="Include">
+          <e p="Ping.cs" t="Include" />
+          <e p="PingHandler.cs" t="Include" />
+        </e>
+        <e p="Controllers" t="Include">
+          <e p="PingPongController.cs" t="Include" />
+        </e>
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp2.1" t="Include">
+              <e p="API_MediatR.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="PingPontBehaviour.cs" t="Include" />
+        <e p="Program.cs" t="Include" />
+        <e p="Properties" t="Include">
+          <e p="launchSettings.json" t="Include" />
+        </e>
+        <e p="Startup.cs" t="Include" />
+        <e p="wwwroot" t="Include" />
+      </e>
       <e p="DDDWithRabbitMQServiceBus" t="IncludeRecursive">
         <e p="appsettings.Development.json" t="Include" />
         <e p="appsettings.json" t="Include" />
@@ -18,6 +45,7 @@
         <e p="DDDWithRabbitMQServiceBus.csproj" t="IncludeRecursive" />
         <e p="EventBus" t="Include">
           <e p="Abstract" t="Include">
+            <e p="IDynamicIntegrationEventHandler.cs" t="Include" />
             <e p="IEventBus.cs" t="Include" />
             <e p="IIntegrationEventHandler.cs" t="Include" />
           </e>

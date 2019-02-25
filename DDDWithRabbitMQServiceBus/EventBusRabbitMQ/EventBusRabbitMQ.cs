@@ -4,6 +4,7 @@ using System.Text;
 using DDDWithRabbitMQServiceBus.EventBus;
 using DDDWithRabbitMQServiceBus.EventBus.Abstract;
 using DDDWithRabbitMQServiceBus.EventBus.Events;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Polly;
 using RabbitMQ.Client;
@@ -19,6 +20,7 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
         private readonly int _retryCount;
         private readonly IEventBusSubscriptionsManager _subsManager;
         private IModel _consumerChannel;
+        
 
         public EventBusRabbitMq(IRabbitMqPersistentConnection rabbitMqPersistentConnection, EventBus.IEventBusSubscriptionsManager subsManager
             ,int retryCount = 5)
@@ -27,6 +29,48 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
             _persistentConnection = rabbitMqPersistentConnection;
             _subsManager = subsManager;
             _consumerChannel = CreateConsumerChannel();
+        }
+        
+        public IModel CreateConsumerChannel()
+        {
+            if (!_persistentConnection.IsConnected)
+            {
+                _persistentConnection.TryConnect();
+            }
+
+            var channel = _persistentConnection.CreateModel();
+
+            channel.ExchangeDeclare(exchange: BrokerName,
+                type: "direct");
+
+            channel.QueueDeclare(queue: "test",
+                durable: true,
+                exclusive: false,
+                autoDelete: false,
+                arguments: null);
+
+
+            var consumer = new EventingBasicConsumer(channel);
+            consumer.Received += (model, ea) =>
+            {
+                Console.WriteLine("Hello World Listner");
+                var eventName = ea.RoutingKey;
+                var message = Encoding.UTF8.GetString(ea.Body);
+
+                channel.BasicAck(ea.DeliveryTag, multiple: false);
+            };
+
+            channel.BasicConsume(queue: "test",
+                autoAck: false,
+                consumer: consumer);
+
+            channel.CallbackException += (sender, ea) =>
+            {
+                _consumerChannel.Dispose();
+                _consumerChannel = CreateConsumerChannel();
+            };
+
+            return channel;
         }
 
         public void Publish(IntegrationEvent @event)
@@ -62,46 +106,6 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
             }
         }
 
-        private IModel CreateConsumerChannel()
-        {
-            if (!_persistentConnection.IsConnected)
-            {
-                _persistentConnection.TryConnect();
-            }
-
-            var channel = _persistentConnection.CreateModel();
-
-            channel.ExchangeDeclare(exchange: BrokerName,
-                type: "direct");
-
-            channel.QueueDeclare(queue: "test",
-                durable: true,
-                exclusive: false,
-                autoDelete: false,
-                arguments: null);
-
-
-            var consumer = new EventingBasicConsumer(channel);
-            consumer.Received += (model, ea) =>
-            {
-                var eventName = ea.RoutingKey;
-                var message = Encoding.UTF8.GetString(ea.Body);
-
-                channel.BasicAck(ea.DeliveryTag, multiple: false);
-            };
-
-            channel.BasicConsume(queue: "test",
-                autoAck: false,
-                consumer: consumer);
-
-            channel.CallbackException += (sender, ea) =>
-            {
-                _consumerChannel.Dispose();
-                _consumerChannel = CreateConsumerChannel();
-            };
-
-            return channel;
-        }
 
         public void Subscribe<T, TH>()
             where T : IntegrationEvent
@@ -110,8 +114,8 @@ namespace DDDWithRabbitMQServiceBus.EventBusRabbitMQ
             var eventName = _subsManager.GetEventKey<T>();
             DoInternalSubscription(eventName);
             _subsManager.AddSubscription<T, TH>();
-            _consumerChannel.BasicGet("test", true);
         }
+
 
         private void DoInternalSubscription(string eventName)
         {

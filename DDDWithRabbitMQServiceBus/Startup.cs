@@ -1,4 +1,5 @@
-﻿using DDDWithRabbitMQServiceBus.EventBus;
+﻿using DDDWithRabbitMQServiceBus.BackgroundWorker;
+using DDDWithRabbitMQServiceBus.EventBus;
 using DDDWithRabbitMQServiceBus.EventBus.Abstract;
 using DDDWithRabbitMQServiceBus.EventBusRabbitMQ;
 using DDDWithRabbitMQServiceBus.Events;
@@ -42,6 +43,7 @@ namespace DDDWithRabbitMQServiceBus
             });
             services.AddSingleton<EventBus.IEventBusSubscriptionsManager, InMemoryEventBusSubscriptionsManager>();
             services.AddTransient<TestEventHandler>();
+            services.AddHostedService<QueueWorker>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
         }
 

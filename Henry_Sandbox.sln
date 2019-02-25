@@ -5,6 +5,8 @@ VisualStudioVersion = 15.0.27428.2043
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDDWithRabbitMQServiceBus", "DDDWithRabbitMQServiceBus\DDDWithRabbitMQServiceBus.csproj", "{A0ECBDD4-3E19-4A4B-8A22-9C062A6928FD}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "API_MediatR", "API_MediatR\API_MediatR.csproj", "{F3F6EA2C-15A1-4336-BFB2-27CEAF7FB7DA}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{A0ECBDD4-3E19-4A4B-8A22-9C062A6928FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A0ECBDD4-3E19-4A4B-8A22-9C062A6928FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A0ECBDD4-3E19-4A4B-8A22-9C062A6928FD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3F6EA2C-15A1-4336-BFB2-27CEAF7FB7DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3F6EA2C-15A1-4336-BFB2-27CEAF7FB7DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3F6EA2C-15A1-4336-BFB2-27CEAF7FB7DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3F6EA2C-15A1-4336-BFB2-27CEAF7FB7DA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
